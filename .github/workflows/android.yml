@@ -21,6 +21,11 @@ jobs:
     - name: Configurar Gradle Oficial
       uses: gradle/actions/setup-gradle@v3
 
+    - name: Corrigir conflito de repositórios automaticamente
+      run: |
+        find . -name "settings.gradle" -exec sed -i 's/FAIL_ON_PROJECT_REPOS/PREFER_PROJECT/g' {} \;
+        find . -name "settings.gradle.kts" -exec sed -i 's/FAIL_ON_PROJECT_REPOS/PREFER_PROJECT/g' {} \;
+
     - name: Compilar APK
       run: gradle assembleDebug
 
