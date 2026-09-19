@@ -18,15 +18,17 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Configurar Gradle Oficial (7.5)
+    - name: Configurar Gradle Oficial (8.5)
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: '7.5'
+        gradle-version: '8.5'
 
-    - name: Garantir Configuração Base
+    - name: Remover Conflitos de Repositórios com Python
       run: |
         python3 -c "
         import glob
+        
+        # Reescrever settings.gradle sem restrições estritas de repositórios
         settings_content = '''pluginManagement {
             repositories {
                 google()
@@ -34,23 +36,16 @@ jobs:
                 gradlePluginPortal()
             }
         }
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
         include ':app'
         '''
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(settings_content)
-        print('Settings aplicado com sucesso.')
+            print(f'Settings limpo com sucesso em: {path}')
         "
 
-    - name: Compilar APK (Modo de Informação Detalhada)
-      run: gradle assembleDebug --info
+    - name: Compilar APK com Gradle 8.5
+      run: gradle assembleDebug --stacktrace
 
     - name: Enviar APK gerado
       uses: actions/upload-artifact@v4
