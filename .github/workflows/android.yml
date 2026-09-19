@@ -18,8 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Configurar Gradle Oficial
+    - name: Configurar Gradle Estável (8.5)
       uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.5'
 
     - name: Corrigir conflito de repositórios com Python
       run: |
@@ -35,8 +37,8 @@ jobs:
                 print(f'Corrigido com sucesso em: {path}')
         "
 
-    - name: Compilar APK com Informação Detalhada
-      run: gradle assembleDebug --info
+    - name: Compilar APK
+      run: gradle assembleDebug
 
     - name: Enviar APK gerado
       uses: actions/upload-artifact@v4
