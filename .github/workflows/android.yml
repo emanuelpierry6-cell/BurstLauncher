@@ -23,26 +23,30 @@ jobs:
       with:
         gradle-version: '7.5'
 
-    - name: Limpar e Corrigir Ficheiros de Configuração
+    - name: Injetar settings.gradle com Repositórios Corretos
       run: |
         python3 -c "
-        import glob, re
-
-        # Limpar settings.gradle
+        import glob
+        settings_content = '''pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        include ':app'
+        '''
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'w', encoding='utf-8') as f:
-                f.write(\"include ':app'\n\")
-            print(f'Settings limpo: {path}')
-
-        # Remover blocos problemáticos nos build.gradle que causam conflitos de sintaxe
-        for path in glob.glob('**/build.gradle*', recursive=True):
-            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
-            # Remove linhas duplicadas ou problemáticas de repositoriesMode se existirem
-            content = re.sub(r'dependencyResolutionManagement\s*\{[^}]*\}', '', content, flags=re.DOTALL)
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(content)
-            print(f'Build.gradle corrigido: {path}')
+                f.write(settings_content)
+            print(f'Settings configurado com sucesso em: {path}')
         "
 
     - name: Compilar APK
