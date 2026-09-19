@@ -23,10 +23,11 @@ jobs:
       with:
         gradle-version: '8.5'
 
-    - name: Corrigir conflito de repositórios com Python
+    - name: Ajustes Automáticos (Repositórios e Namespace)
       run: |
         python3 -c "
         import glob
+        # 1. Corrigir repositórios
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
@@ -34,7 +35,15 @@ jobs:
                 content = content.replace('FAIL_ON_PROJECT_REPOS', 'PREFER_PROJECT')
                 with open(path, 'w', encoding='utf-8') as f:
                     f.write(content)
-                print(f'Corrigido com sucesso em: {path}')
+
+        # 2. Injetar namespace no app/build.gradle
+        for path in glob.glob('**/app/build.gradle', recursive=True):
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            if 'namespace' not in content:
+                content = content.replace('android {', 'android {\n    namespace \"com.mojang.minecraftpe\"')
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(content)
         "
 
     - name: Compilar APK
