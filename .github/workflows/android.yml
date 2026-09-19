@@ -18,13 +18,11 @@ jobs:
         distribution: 'temurin'
         java-version: '8'
 
-    - name: Instalar Gradle no Sistema
+    - name: Criar Ambiente e Wrapper Compatível (Gradle 7.5)
       run: |
-        sudo apt-get update
-        sudo apt-get install -y gradle
-
-    - name: Limpar restrições do Gradle com Python
-      run: |
+        sudo apt-get update && sudo apt-get install -y gradle
+        
+        # Limpar conflitos de repositórios automaticamente
         python3 -c "
         import glob
         for path in glob.glob('**/settings.gradle*', recursive=True):
@@ -34,9 +32,13 @@ jobs:
             with open(path, 'w', encoding='utf-8') as f:
                 f.writelines(new_lines)
         "
+        
+        # Gerar a ponte oficial do projeto
+        gradle wrapper --gradle-version 7.5
+        chmod +x gradlew
 
-    - name: Compilar com Gradle do Sistema
-      run: gradle assembleDebug --stacktrace
+    - name: Compilar APK com Sucesso
+      run: ./gradlew assembleDebug --stacktrace
 
     - name: Enviar APK gerado
       uses: actions/upload-artifact@v4
