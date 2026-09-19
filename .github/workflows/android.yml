@@ -12,11 +12,11 @@ jobs:
     - name: Checkout do código
       uses: actions/checkout@v4
 
-    - name: Configurar Java 8
+    - name: Configurar Java 11 (Obrigatório para o Gradle)
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '8'
+        java-version: '11'
 
     - name: Criar Ambiente e Wrapper Compatível (Gradle 7.5)
       run: |
