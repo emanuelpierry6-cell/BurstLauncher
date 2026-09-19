@@ -12,33 +12,28 @@ jobs:
     - name: Checkout do código
       uses: actions/checkout@v4
 
-    - name: Configurar Java 11 (Obrigatório para o Gradle)
+    - name: Configurar Java 11
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '11'
 
-    - name: Criar Ambiente e Wrapper Compatível (Gradle 7.5)
+    - name: Reescrever settings.gradle limpo com Python
       run: |
-        sudo apt-get update && sudo apt-get install -y gradle
-        
-        # Limpar conflitos de repositórios automaticamente
         python3 -c "
         import glob
         for path in glob.glob('**/settings.gradle*', recursive=True):
-            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                lines = f.readlines()
-            new_lines = [l for l in lines if 'repositoriesMode' not in l and 'FAIL_ON_PROJECT_REPOS' not in l]
             with open(path, 'w', encoding='utf-8') as f:
-                f.writelines(new_lines)
+                f.write(\"include ':app'\n\")
+            print(f'Ficheiro reescrito com sucesso: {path}')
         "
-        
-        # Gerar a ponte oficial do projeto
+
+    - name: Criar Wrapper e Compilar
+      run: |
+        sudo apt-get update && sudo apt-get install -y gradle
         gradle wrapper --gradle-version 7.5
         chmod +x gradlew
-
-    - name: Compilar APK com Sucesso
-      run: ./gradlew assembleDebug --stacktrace
+        ./gradlew assembleDebug --stacktrace
 
     - name: Enviar APK gerado
       uses: actions/upload-artifact@v4
