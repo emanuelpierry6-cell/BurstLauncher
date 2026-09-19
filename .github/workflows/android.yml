@@ -23,12 +23,10 @@ jobs:
       with:
         gradle-version: '8.5'
 
-    - name: Ajustar Configurações e Plugin com Python
+    - name: Limpar e Blindar Configurações com Python
       run: |
         python3 -c "
-        import glob, re
-
-        # 1. Reescrever settings.gradle otimizado para Gradle 8.5
+        # 1. Criar um settings.gradle limpo
         settings_content = '''pluginManagement {
             repositories {
                 google()
@@ -36,31 +34,34 @@ jobs:
                 gradlePluginPortal()
             }
         }
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+        include ':app'
+        '''
+        with open('settings.gradle', 'w', encoding='utf-8') as f:
+            f.write(settings_content)
+
+        # 2. Substituir o build.gradle principal da raiz por um modelo infalível
+        root_build_gradle = '''buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:8.1.1'
+            }
+        }
+        allprojects {
             repositories {
                 google()
                 mavenCentral()
             }
         }
-        include ':app'
         '''
-        for path in glob.glob('**/settings.gradle*', recursive=True):
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(settings_content)
-            print(f'Settings atualizado em: {path}')
-
-        # 2. Atualizar o Plugin do Android para a versão 8.1.1 (compatível com Gradle 8.5)
-        for path in glob.glob('**/build.gradle*', recursive=True):
-            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
-            content = re.sub(r'com\.android\.tools\.build:gradle:[\'\"].*?[\'\"]', \"com.android.tools.build:gradle: '8.1.1'\", content)
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(content)
-            print(f'Build.gradle atualizado em: {path}')
+        with open('build.gradle', 'w', encoding='utf-8') as f:
+            f.write(root_build_gradle)
+        print('Ficheiros da raiz corrigidos com sucesso!')
         "
 
-    - name: Compilar APK com Gradle 8.5
+    - name: Compilar APK Definitivo
       run: gradle assembleDebug --stacktrace
 
     - name: Enviar APK gerado
