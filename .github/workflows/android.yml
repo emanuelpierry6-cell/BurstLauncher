@@ -23,82 +23,120 @@ jobs:
       with:
         gradle-version: '8.5'
 
-    - name: Modernizar Estrutura do Projeto com Python
+    - name: Gerar Projeto Android Completo com Python
       run: |
         python3 -c "
         import os
 
-        # 1. settings.gradle moderno
-        settings_content = '''pluginManagement {
-            repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-            }
-        }
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-        rootProject.name = 'BurstLauncher'
-        include ':app'
-        '''
+        # 1. settings.gradle
         with open('settings.gradle', 'w', encoding='utf-8') as f:
-            f.write(settings_content)
-
-        # 2. root build.gradle limpo
-        with open('build.gradle', 'w', encoding='utf-8') as f:
-            f.write('// Root build file modernizado\n')
-
-        # 3. app/build.gradle moderno sem buildscript antigo
-        app_build_dir = 'app'
-        os.makedirs(app_build_dir, exist_ok=True)
-        app_build_content = '''plugins {
-            id 'com.android.application'
-        }
-
-        android {
-            namespace 'com.burst.launcher'
-            compileSdk 34
-
-            defaultConfig {
-                applicationId 'com.burst.launcher'
-                minSdk 24
-                targetSdk 34
-                versionCode 1
-                versionName '1.0'
-
-                testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-            }
-
-            buildTypes {
-                release {
-                    minifyEnabled false
-                    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            f.write('''pluginManagement {
+                repositories {
+                    google()
+                    mavenCentral()
+                    gradlePluginPortal()
                 }
             }
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
+            dependencyResolutionManagement {
+                repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+                repositories {
+                    google()
+                    mavenCentral()
+                }
             }
-        }
+            rootProject.name = 'BurstLauncher'
+            include ':app'
+            ''')
 
-        dependencies {
-            implementation 'androidx.core:core-ktx:1.12.0'
-            implementation 'androidx.appcompat:appcompat:1.6.1'
-            implementation 'com.google.android.material:material:1.11.0'
-        }
-        '''
-        with open(os.path.join(app_build_dir, 'build.gradle'), 'w', encoding='utf-8') as f:
-            f.write(app_build_content)
+        # 2. root build.gradle
+        with open('build.gradle', 'w', encoding='utf-8') as f:
+            f.write('// Root build file\n')
 
-        print('Projeto modernizado com sucesso!')
+        # 3. app/build.gradle
+        os.makedirs('app', exist_ok=True)
+        with open('app/build.gradle', 'w', encoding='utf-8') as f:
+            f.write('''plugins {
+                id 'com.android.application'
+            }
+
+            android {
+                namespace 'com.burst.launcher'
+                compileSdk 34
+
+                defaultConfig {
+                    applicationId 'com.burst.launcher'
+                    minSdk 24
+                    targetSdk 34
+                    versionCode 1
+                    versionName '1.0'
+                    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+                }
+
+                buildTypes {
+                    release {
+                        minifyEnabled false
+                        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                    }
+                }
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+
+            dependencies {
+                implementation 'androidx.core:core-ktx:1.12.0'
+                implementation 'androidx.appcompat:appcompat:1.6.1'
+                implementation 'com.google.android.material:material:1.11.0'
+            }
+            ''')
+
+        # 4. AndroidManifest.xml
+        manifest_dir = 'app/src/main'
+        os.makedirs(manifest_dir, exist_ok=True)
+        with open(os.path.join(manifest_dir, 'AndroidManifest.xml'), 'w', encoding='utf-8') as f:
+            f.write('''<?xml version=\"1.0\" encoding=\"utf-8\"?>
+            <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">
+                <application
+                    android:allowBackup=\"true\"
+                    android:supportsRtl=\"true\"
+                    android:theme=\"@style/Theme.AppCompat.Light.DarkActionBar\">
+                    <activity
+                        android:name=\".MainActivity\"
+                        android:exported=\"true\">
+                        <intent-filter>
+                            <action android:name=\"android.intent.action.MAIN\" />
+                            <category android:name=\"android.intent.category.LAUNCHER\" />
+                        </intent-filter>
+                    </activity>
+                </application>
+            </manifest>
+            ''')
+
+        # 5. MainActivity.java
+        java_dir = 'app/src/main/java/com/burst/launcher'
+        os.makedirs(java_dir, exist_ok=True)
+        with open(os.path.join(java_dir, 'MainActivity.java'), 'w', encoding='utf-8') as f:
+            f.write('''package com.burst.launcher;
+
+            import android.os.Bundle;
+            import androidx.appcompat.app.AppCompatActivity;
+
+            public class MainActivity extends AppCompatActivity {
+                @Override
+                protected void onCreate(Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
+                    android.widget.TextView tv = new android.widget.TextView(this);
+                    tv.setText(\"Burst Launcher Ativo!\");
+                    setContentView(tv);
+                }
+            }
+            ''')
+
+        print('Estrutura completa gerada com sucesso!')
         "
 
-    - name: Compilar APK Definitivo
+    - name: Compilar APK Final
       run: gradle assembleDebug --stacktrace
 
     - name: Enviar APK gerado
