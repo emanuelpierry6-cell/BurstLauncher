@@ -17,7 +17,11 @@ jobs:
         java-version: '17'
 
     - name: Configurar Android SDK
-      uses: android-actions/setup-android@v3
+      uses: subosito/android-action@v2
+      with:
+        target-sdk: 33
+        build-tools: '33.0.2'
+        sdk-version: '33'
 
     - name: Gerar Gradle Wrapper
       run: gradle wrapper --gradle-version 8.0
@@ -33,4 +37,3 @@ jobs:
       with:
         name: Burst-Launcher-APK
         path: app/build/outputs/apk/debug/app-debug.apk
-
