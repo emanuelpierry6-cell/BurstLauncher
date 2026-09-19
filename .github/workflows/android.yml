@@ -23,12 +23,12 @@ jobs:
       with:
         gradle-version: '8.5'
 
-    - name: Remover Conflitos de Repositórios com Python
+    - name: Ajustar Configurações e Plugin com Python
       run: |
         python3 -c "
-        import glob
-        
-        # Reescrever settings.gradle sem restrições estritas de repositórios
+        import glob, re
+
+        # 1. Reescrever settings.gradle otimizado para Gradle 8.5
         settings_content = '''pluginManagement {
             repositories {
                 google()
@@ -36,12 +36,28 @@ jobs:
                 gradlePluginPortal()
             }
         }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
         include ':app'
         '''
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(settings_content)
-            print(f'Settings limpo com sucesso em: {path}')
+            print(f'Settings atualizado em: {path}')
+
+        # 2. Atualizar o Plugin do Android para a versão 8.1.1 (compatível com Gradle 8.5)
+        for path in glob.glob('**/build.gradle*', recursive=True):
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            content = re.sub(r'com\.android\.tools\.build:gradle:[\'\"].*?[\'\"]', \"com.android.tools.build:gradle: '8.1.1'\", content)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f'Build.gradle atualizado em: {path}')
         "
 
     - name: Compilar APK com Gradle 8.5
