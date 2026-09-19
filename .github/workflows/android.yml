@@ -23,10 +23,12 @@ jobs:
       with:
         gradle-version: '7.5'
 
-    - name: Injetar settings.gradle com Repositórios Corretos
+    - name: Atualizar Plugin do Android e Configurações
       run: |
         python3 -c "
-        import glob
+        import glob, re
+
+        # 1. Configurar settings.gradle perfeito
         settings_content = '''pluginManagement {
             repositories {
                 google()
@@ -46,7 +48,15 @@ jobs:
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(settings_content)
-            print(f'Settings configurado com sucesso em: {path}')
+
+        # 2. Atualizar a versão do plugin do Android para 7.4.2 (compatível com Gradle 7.5)
+        for path in glob.glob('**/build.gradle*', recursive=True):
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            content = re.sub(r'com\.android\.tools\.build:gradle:[\'\"].*?[\'\"]', \"com.android.tools.build:gradle: '7.4.2'\", content)
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(content)
+        print('Ficheiros atualizados com sucesso!')
         "
 
     - name: Compilar APK
