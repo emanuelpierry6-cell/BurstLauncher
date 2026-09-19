@@ -21,10 +21,19 @@ jobs:
     - name: Configurar Gradle Oficial
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Corrigir conflito de repositórios automaticamente
+    - name: Corrigir conflito de repositórios com Python
       run: |
-        find . -name "settings.gradle" -exec sed -i 's/FAIL_ON_PROJECT_REPOS/PREFER_PROJECT/g' {} \;
-        find . -name "settings.gradle.kts" -exec sed -i 's/FAIL_ON_PROJECT_REPOS/PREFER_PROJECT/g' {} \;
+        python3 -c "
+        import glob
+        for path in glob.glob('**/settings.gradle*', recursive=True):
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            if 'FAIL_ON_PROJECT_REPOS' in content:
+                content = content.replace('FAIL_ON_PROJECT_REPOS', 'PREFER_PROJECT')
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f'Corrigido com sucesso em: {path}')
+        "
 
     - name: Compilar APK
       run: gradle assembleDebug
