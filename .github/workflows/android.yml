@@ -23,18 +23,26 @@ jobs:
       with:
         gradle-version: '7.5'
 
-    - name: Limpar Conflitos de Repositórios com Segurança
+    - name: Limpar e Corrigir Ficheiros de Configuração
       run: |
         python3 -c "
         import glob, re
+
+        # Limpar settings.gradle
         for path in glob.glob('**/settings.gradle*', recursive=True):
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(\"include ':app'\n\")
+            print(f'Settings limpo: {path}')
+
+        # Remover blocos problemáticos nos build.gradle que causam conflitos de sintaxe
+        for path in glob.glob('**/build.gradle*', recursive=True):
             with open(path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
-            # Remove completamente o bloco dependencyResolutionManagement para evitar conflitos
+            # Remove linhas duplicadas ou problemáticas de repositoriesMode se existirem
             content = re.sub(r'dependencyResolutionManagement\s*\{[^}]*\}', '', content, flags=re.DOTALL)
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(content)
-            print(f'Ficheiro limpo com sucesso: {path}')
+            print(f'Build.gradle corrigido: {path}')
         "
 
     - name: Compilar APK
