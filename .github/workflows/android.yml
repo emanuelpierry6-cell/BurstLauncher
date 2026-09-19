@@ -23,12 +23,10 @@ jobs:
       with:
         gradle-version: '7.5'
 
-    - name: Atualizar Plugin do Android e Configurações
+    - name: Garantir Configuração Base
       run: |
         python3 -c "
-        import glob, re
-
-        # 1. Configurar settings.gradle perfeito
+        import glob
         settings_content = '''pluginManagement {
             repositories {
                 google()
@@ -48,19 +46,11 @@ jobs:
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(settings_content)
-
-        # 2. Atualizar a versão do plugin do Android para 7.4.2 (compatível com Gradle 7.5)
-        for path in glob.glob('**/build.gradle*', recursive=True):
-            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
-            content = re.sub(r'com\.android\.tools\.build:gradle:[\'\"].*?[\'\"]', \"com.android.tools.build:gradle: '7.4.2'\", content)
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(content)
-        print('Ficheiros atualizados com sucesso!')
+        print('Settings aplicado com sucesso.')
         "
 
-    - name: Compilar APK
-      run: gradle assembleDebug --stacktrace
+    - name: Compilar APK (Modo de Informação Detalhada)
+      run: gradle assembleDebug --info
 
     - name: Enviar APK gerado
       uses: actions/upload-artifact@v4
