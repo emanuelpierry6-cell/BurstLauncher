@@ -18,19 +18,26 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Instalar Gradle e Limpar Configurações
+    - name: Configurar Gradle Oficial (7.5)
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '7.5'
+
+    - name: Limpar Conflitos de Repositórios com Segurança
       run: |
-        sudo apt-get update && sudo apt-get install -y gradle
-        
-        # Limpar settings.gradle de forma limpa
         python3 -c "
-        import glob
+        import glob, re
         for path in glob.glob('**/settings.gradle*', recursive=True):
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            # Remove completamente o bloco dependencyResolutionManagement para evitar conflitos
+            content = re.sub(r'dependencyResolutionManagement\s*\{[^}]*\}', '', content, flags=re.DOTALL)
             with open(path, 'w', encoding='utf-8') as f:
-                f.write(\"include ':app'\n\")
+                f.write(content)
+            print(f'Ficheiro limpo com sucesso: {path}')
         "
 
-    - name: Compilar APK Diretamente com o Gradle
+    - name: Compilar APK
       run: gradle assembleDebug --stacktrace
 
     - name: Enviar APK gerado
