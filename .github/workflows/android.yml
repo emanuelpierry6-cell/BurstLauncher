@@ -23,10 +23,12 @@ jobs:
       with:
         gradle-version: '8.5'
 
-    - name: Limpar e Blindar Configurações com Python
+    - name: Modernizar Estrutura do Projeto com Python
       run: |
         python3 -c "
-        # 1. Criar um settings.gradle limpo
+        import os
+
+        # 1. settings.gradle moderno
         settings_content = '''pluginManagement {
             repositories {
                 google()
@@ -34,31 +36,66 @@ jobs:
                 gradlePluginPortal()
             }
         }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.name = 'BurstLauncher'
         include ':app'
         '''
         with open('settings.gradle', 'w', encoding='utf-8') as f:
             f.write(settings_content)
 
-        # 2. Substituir o build.gradle principal da raiz por um modelo infalível
-        root_build_gradle = '''buildscript {
-            repositories {
-                google()
-                mavenCentral()
+        # 2. root build.gradle limpo
+        with open('build.gradle', 'w', encoding='utf-8') as f:
+            f.write('// Root build file modernizado\n')
+
+        # 3. app/build.gradle moderno sem buildscript antigo
+        app_build_dir = 'app'
+        os.makedirs(app_build_dir, exist_ok=True)
+        app_build_content = '''plugins {
+            id 'com.android.application'
+        }
+
+        android {
+            namespace 'com.burst.launcher'
+            compileSdk 34
+
+            defaultConfig {
+                applicationId 'com.burst.launcher'
+                minSdk 24
+                targetSdk 34
+                versionCode 1
+                versionName '1.0'
+
+                testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
             }
-            dependencies {
-                classpath 'com.android.tools.build:gradle:8.1.1'
+
+            buildTypes {
+                release {
+                    minifyEnabled false
+                    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                }
+            }
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
             }
         }
-        allprojects {
-            repositories {
-                google()
-                mavenCentral()
-            }
+
+        dependencies {
+            implementation 'androidx.core:core-ktx:1.12.0'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'com.google.android.material:material:1.11.0'
         }
         '''
-        with open('build.gradle', 'w', encoding='utf-8') as f:
-            f.write(root_build_gradle)
-        print('Ficheiros da raiz corrigidos com sucesso!')
+        with open(os.path.join(app_build_dir, 'build.gradle'), 'w', encoding='utf-8') as f:
+            f.write(app_build_content)
+
+        print('Projeto modernizado com sucesso!')
         "
 
     - name: Compilar APK Definitivo
