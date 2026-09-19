@@ -12,28 +12,42 @@ jobs:
     - name: Checkout do código
       uses: actions/checkout@v4
 
-    - name: Configurar Java 11
+    - name: Configurar Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '11'
+        java-version: '17'
 
-    - name: Reescrever settings.gradle limpo com Python
+    - name: Atualizar Wrapper e Configurações com Python
       run: |
         python3 -c "
-        import glob
+        import os, glob
+        
+        # 1. Limpar settings.gradle
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(\"include ':app'\n\")
-            print(f'Ficheiro reescrito com sucesso: {path}')
-        "
+            print(f'Settings limpo: {path}')
 
-    - name: Criar Wrapper e Compilar
-      run: |
-        sudo apt-get update && sudo apt-get install -y gradle
-        gradle wrapper --gradle-version 7.5
-        chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
+        # 2. Forçar gradle-wrapper.properties para a versão 8.5
+        os.makedirs('gradle/wrapper', exist_ok=True)
+        prop_path = 'gradle/wrapper/gradle-wrapper.properties'
+        prop_content = '''distributionBase=GRADLE_USER_HOME
+        distributionPath=wrapper/dists
+        distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
+        networkTimeout=10000
+        validateDistributionUrl=true
+        zipStoreBase=GRADLE_USER_HOME
+        zipStorePath=wrapper/dists
+        '''
+        with open(prop_path, 'w', encoding='utf-8') as f:
+            f.write(prop_content)
+        print('Wrapper atualizado para 8.5 com sucesso')
+        "
+        chmod +x gradlew || true
+
+    - name: Compilar APK com Gradle 8.5
+      run: ./gradlew assembleDebug --stacktrace
 
     - name: Enviar APK gerado
       uses: actions/upload-artifact@v4
