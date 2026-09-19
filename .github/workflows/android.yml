@@ -18,36 +18,20 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Atualizar Wrapper e Configurações com Python
+    - name: Instalar Gradle e Limpar Configurações
       run: |
-        python3 -c "
-        import os, glob
+        sudo apt-get update && sudo apt-get install -y gradle
         
-        # 1. Limpar settings.gradle
+        # Limpar settings.gradle de forma limpa
+        python3 -c "
+        import glob
         for path in glob.glob('**/settings.gradle*', recursive=True):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(\"include ':app'\n\")
-            print(f'Settings limpo: {path}')
-
-        # 2. Forçar gradle-wrapper.properties para a versão 8.5
-        os.makedirs('gradle/wrapper', exist_ok=True)
-        prop_path = 'gradle/wrapper/gradle-wrapper.properties'
-        prop_content = '''distributionBase=GRADLE_USER_HOME
-        distributionPath=wrapper/dists
-        distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
-        networkTimeout=10000
-        validateDistributionUrl=true
-        zipStoreBase=GRADLE_USER_HOME
-        zipStorePath=wrapper/dists
-        '''
-        with open(prop_path, 'w', encoding='utf-8') as f:
-            f.write(prop_content)
-        print('Wrapper atualizado para 8.5 com sucesso')
         "
-        chmod +x gradlew || true
 
-    - name: Compilar APK com Gradle 8.5
-      run: ./gradlew assembleDebug --stacktrace
+    - name: Compilar APK Diretamente com o Gradle
+      run: gradle assembleDebug --stacktrace
 
     - name: Enviar APK gerado
       uses: actions/upload-artifact@v4
